@@ -150,6 +150,35 @@ function buildOverlay() {
 
   // ---- Interactions ----
 
+  // Drag to reposition
+  header.addEventListener('mousedown', (e) => {
+    if (e.target === minBtn) return; // don't drag when clicking minimize
+    e.preventDefault();
+
+    // Switch from right-anchored to left-anchored so we can freely position
+    const rect = root.getBoundingClientRect();
+    root.style.right = '';
+    root.style.left = rect.left + 'px';
+    root.style.top  = rect.top  + 'px';
+
+    const startX = e.clientX - rect.left;
+    const startY = e.clientY - rect.top;
+
+    root.style.cursor = 'grabbing';
+
+    function onMove(e) {
+      root.style.left = Math.max(0, e.clientX - startX) + 'px';
+      root.style.top  = Math.max(0, e.clientY - startY) + 'px';
+    }
+    function onUp() {
+      root.style.cursor = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+
   // Minimize / expand
   let minimized = false;
   minBtn.addEventListener('click', () => {

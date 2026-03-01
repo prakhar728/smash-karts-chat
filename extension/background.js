@@ -13,6 +13,7 @@ let reconnectDelay = 1_000;
 let reconnectTimer = null;
 let lastSentAt = 0;
 let detectedPlayName = null; // player name detected from game DOM
+let connectToken = 0; // incremented on each connect() call to cancel in-flight duplicates
 
 // ---- Play profile (anonymous fallback) ----
 
@@ -101,14 +102,22 @@ async function connect(mode, tabId) {
     ws = null;
   }
 
+  // Claim a token before the async gap. If another connect() call arrives
+  // while we're awaiting buildWsUrl, it increments connectToken and our
+  // continuation will bail — preventing a second orphaned WebSocket in the room.
+  const myToken = ++connectToken;
+
   let wsUrl;
   try {
     wsUrl = await buildWsUrl(mode);
   } catch (e) {
+    if (myToken !== connectToken) return;
     sendToTab({ type: 'status', connected: false, error: 'Auth failed' });
     scheduleReconnect();
     return;
   }
+
+  if (myToken !== connectToken) return;
 
   ws = new WebSocket(wsUrl);
 

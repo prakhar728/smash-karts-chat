@@ -1,0 +1,16 @@
+{
+  "name": "smashkarts-load-test",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "baseline": "node index.js --connections 10  --interval 500 --duration 60",
+    "light":    "node index.js --connections 50  --interval 500 --duration 60",
+    "medium":   "node index.js --connections 200 --interval 500 --duration 60",
+    "heavy":    "node index.js --connections 500 --interval 500 --duration 120",
+    "burst":    "node index.js --connections 200 --interval 50  --duration 60",
+    "churn":    "node index.js --connections 200 --interval 500 --duration 120 --churn 5"
+  },
+  "dependencies": {
+    "ws": "^8.17.0"
+  }
+}

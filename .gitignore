@@ -1,26 +1,48 @@
-# ── Local planning docs ───────────────────────────────────────────────────────
+# Local planning docs
 plans/
 
-# ── Secrets / environment ─────────────────────────────────────────────────────
+# Local editor/tool settings
+.claude/settings.local.json
+
+# Secrets / environment
 .env
 .env.*
 !.env.example
 
-# ── Rust ──────────────────────────────────────────────────────────────────────
+# Rust
 target/
-Cargo.lock          # omit for binaries; keep for libraries (this is a binary)
-server/game-traffic.log
+**/target/
+*.rs.bk
 
-# ── Chrome extension build artefacts ─────────────────────────────────────────
+# Node / JS tooling
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.npm/
+
+# Test / runtime artifacts
+*.log
+server/game-traffic.log
+coverage/
+.nyc_output/
+dist/
+
+# Chrome extension build artifacts
 extension/dist/
 extension/*.zip
 
-# ── macOS ─────────────────────────────────────────────────────────────────────
+# OS files
 .DS_Store
 .AppleDouble
 .LSOverride
+Thumbs.db
+Desktop.ini
 
-# ── Editors ───────────────────────────────────────────────────────────────────
+# Editors / IDE
 .idea/
 .vscode/
 *.swp

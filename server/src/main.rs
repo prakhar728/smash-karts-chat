@@ -1,6 +1,9 @@
 use std::{
     collections::HashMap,
-    sync::Arc,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
     time::{Duration, Instant},
 };
 
@@ -23,10 +26,27 @@ use tokio::sync::{RwLock, mpsc};
 use tracing::{error, info, warn};
 use uuid::Uuid;
 
+struct Metrics {
+    total_connections: AtomicU64,
+    messages_broadcast: AtomicU64,
+    started_at: Instant,
+}
+
+impl Metrics {
+    fn new() -> Self {
+        Self {
+            total_connections: AtomicU64::new(0),
+            messages_broadcast: AtomicU64::new(0),
+            started_at: Instant::now(),
+        }
+    }
+}
+
 #[derive(Clone)]
 struct AppState {
     rooms: Arc<RwLock<HashMap<String, Room>>>,
     auth: AuthService,
+    metrics: Arc<Metrics>,
 }
 
 #[derive(Clone, Default)]
@@ -91,6 +111,14 @@ struct HealthResponse {
     ok: bool,
 }
 
+#[derive(Serialize)]
+struct MetricsResponse {
+    rooms: u64,
+    total_connections: u64,
+    messages_broadcast: u64,
+    uptime_secs: u64,
+}
+
 #[derive(Deserialize)]
 struct GoogleTokenInfo {
     aud: String,
@@ -122,10 +150,12 @@ async fn main() -> anyhow::Result<()> {
             google_client_id,
             http: reqwest::Client::new(),
         },
+        metrics: Arc::new(Metrics::new()),
     };
 
     let app = Router::new()
         .route("/health", get(health))
+        .route("/metrics", get(metrics_handler))
         .route("/ws", get(ws_handler))
         .route("/log", post(log_entry))
         .with_state(state);
@@ -138,6 +168,16 @@ async fn main() -> anyhow::Result<()> {
 
 async fn health() -> impl IntoResponse {
     Json(HealthResponse { ok: true })
+}
+
+async fn metrics_handler(State(state): State<AppState>) -> impl IntoResponse {
+    let room_count = state.rooms.read().await.len() as u64;
+    Json(MetricsResponse {
+        rooms: room_count,
+        total_connections: state.metrics.total_connections.load(Ordering::Relaxed),
+        messages_broadcast: state.metrics.messages_broadcast.load(Ordering::Relaxed),
+        uptime_secs: state.metrics.started_at.elapsed().as_secs(),
+    })
 }
 
 async fn ws_handler(
@@ -270,6 +310,7 @@ async fn handle_socket(state: AppState, socket: WebSocket, room: String, mut pro
             },
         );
     }
+    state.metrics.total_connections.fetch_add(1, Ordering::Relaxed);
 
     let join_msg = ServerWsMessage::System {
         text: format!("{} joined", profile.display_name),
@@ -371,6 +412,11 @@ async fn broadcast_room(state: &AppState, room: &str, msg: ServerWsMessage) {
             .map(|room_state| room_state.users.values().map(|u| u.tx.clone()).collect())
             .unwrap_or_default()
     };
+
+    state
+        .metrics
+        .messages_broadcast
+        .fetch_add(subscribers.len() as u64, Ordering::Relaxed);
 
     for tx in subscribers {
         let _ = tx.send(msg.clone());
