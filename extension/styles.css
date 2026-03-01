@@ -1,0 +1,180 @@
+/* =============================================
+   SmashKarts Chat Overlay
+   ============================================= */
+
+#sk-chat-root {
+  all: initial; /* reset any page styles */
+  position: fixed;
+  top: 120px;
+  right: 20px;
+  width: 300px;
+  z-index: 2147483647;
+
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(10, 12, 18, 0.93);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  color: #e2e8f0;
+  line-height: 1.4;
+}
+
+/* ---- Header ---- */
+
+.sk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  user-select: none;
+}
+
+.sk-room {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+}
+
+.sk-room.connected    { color: #4ade80; }
+.sk-room.disconnected { color: #f87171; }
+
+.sk-icon-btn {
+  all: unset;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.15s;
+}
+.sk-icon-btn:hover { color: #e2e8f0; }
+
+/* ---- Body (messages + input) ---- */
+
+#sk-body {
+  display: flex;
+  flex-direction: column;
+  height: 260px;
+}
+
+#sk-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+#sk-messages::-webkit-scrollbar       { width: 4px; }
+#sk-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+
+/* ---- Messages ---- */
+
+.sk-msg {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px;
+  font-size: 12.5px;
+  word-break: break-word;
+}
+
+.sk-msg-chat {}
+
+.sk-msg-system {
+  color: #64748b;
+  font-style: italic;
+  font-size: 11.5px;
+}
+
+.sk-name {
+  color: #60a5fa;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.sk-sep { color: #475569; }
+
+.sk-text { color: #e2e8f0; }
+
+.sk-sys-text { color: #64748b; }
+
+.sk-time {
+  color: #334155;
+  font-size: 10px;
+  margin-left: auto;
+  padding-left: 6px;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+/* ---- Input row ---- */
+
+.sk-input-row {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#sk-input {
+  all: unset;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  color: #e2e8f0;
+  font-size: 12px;
+  padding: 5px 9px;
+  transition: border-color 0.15s;
+}
+#sk-input:focus         { border-color: rgba(96, 165, 250, 0.55); }
+#sk-input::placeholder  { color: #475569; }
+
+.sk-send-btn {
+  all: unset;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 7px;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.sk-send-btn:hover  { background: #1d4ed8; }
+.sk-send-btn:active { background: #1e40af; }
+
+/* ---- Footer (mode selector) ---- */
+
+#sk-footer {
+  padding: 6px 10px 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#sk-mode-select {
+  all: unset;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 11px;
+  padding: 3px 7px;
+  cursor: pointer;
+}
+#sk-mode-select option { background: #0f172a; color: #e2e8f0; }

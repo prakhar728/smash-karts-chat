@@ -1,0 +1,28 @@
+# ── Local planning docs ───────────────────────────────────────────────────────
+plans/
+
+# ── Secrets / environment ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Rust ──────────────────────────────────────────────────────────────────────
+target/
+Cargo.lock          # omit for binaries; keep for libraries (this is a binary)
+server/game-traffic.log
+
+# ── Chrome extension build artefacts ─────────────────────────────────────────
+extension/dist/
+extension/*.zip
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Editors ───────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
