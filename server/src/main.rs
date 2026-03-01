@@ -9,6 +9,7 @@ use std::{
 
 use anyhow::Context;
 use axum::{
+    Json, Router,
     extract::{
         State, WebSocketUpgrade,
         ws::{Message, WebSocket},
@@ -16,12 +17,11 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::{get, post},
-    Json, Router,
 };
-use tokio::io::AsyncWriteExt;
 use chrono::{DateTime, Utc};
 use futures::{sink::SinkExt, stream::StreamExt};
 use serde::{Deserialize, Serialize};
+use tokio::io::AsyncWriteExt;
 use tokio::sync::{RwLock, mpsc};
 use tracing::{error, info, warn};
 use uuid::Uuid;
@@ -47,6 +47,7 @@ struct AppState {
     rooms: Arc<RwLock<HashMap<String, Room>>>,
     auth: AuthService,
     metrics: Arc<Metrics>,
+    log_path: Arc<str>,
 }
 
 #[derive(Clone, Default)]
@@ -143,6 +144,7 @@ async fn main() -> anyhow::Result<()> {
     let google_client_id = std::env::var("GOOGLE_CLIENT_ID")
         .context("GOOGLE_CLIENT_ID must be set (Chrome extension OAuth client id)")?;
     let bind_addr = std::env::var("BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+    let log_path = std::env::var("LOG_PATH").unwrap_or_else(|_| "game-traffic.log".to_string());
 
     let state = AppState {
         rooms: Arc::new(RwLock::new(HashMap::new())),
@@ -151,6 +153,7 @@ async fn main() -> anyhow::Result<()> {
             http: reqwest::Client::new(),
         },
         metrics: Arc::new(Metrics::new()),
+        log_path: Arc::<str>::from(log_path),
     };
 
     let app = Router::new()
@@ -210,7 +213,10 @@ fn normalize_room(mode: &str) -> String {
 async fn authenticate(auth: &AuthService, query: &WsQuery) -> anyhow::Result<UserProfile> {
     match query.provider.as_deref().unwrap_or("google") {
         "google" => {
-            let token = query.token.as_deref().context("Missing token for google auth")?;
+            let token = query
+                .token
+                .as_deref()
+                .context("Missing token for google auth")?;
             auth.verify_google_id_token(token).await
         }
         "google_access_token" => {
@@ -310,7 +316,10 @@ async fn handle_socket(state: AppState, socket: WebSocket, room: String, mut pro
             },
         );
     }
-    state.metrics.total_connections.fetch_add(1, Ordering::Relaxed);
+    state
+        .metrics
+        .total_connections
+        .fetch_add(1, Ordering::Relaxed);
 
     let join_msg = ServerWsMessage::System {
         text: format!("{} joined", profile.display_name),
@@ -423,7 +432,10 @@ async fn broadcast_room(state: &AppState, room: &str, msg: ServerWsMessage) {
     }
 }
 
-async fn log_entry(Json(payload): Json<serde_json::Value>) -> impl IntoResponse {
+async fn log_entry(
+    State(state): State<AppState>,
+    Json(payload): Json<serde_json::Value>,
+) -> impl IntoResponse {
     let line = match serde_json::to_string(&payload) {
         Ok(s) => format!("{s}\n"),
         Err(e) => {
@@ -435,7 +447,7 @@ async fn log_entry(Json(payload): Json<serde_json::Value>) -> impl IntoResponse 
     match tokio::fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open("game-traffic.log")
+        .open(state.log_path.as_ref())
         .await
     {
         Ok(mut file) => {
