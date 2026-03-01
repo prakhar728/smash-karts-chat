@@ -5,7 +5,7 @@
 #sk-chat-root {
   all: initial; /* reset any page styles */
   position: fixed;
-  top: 120px;
+  top: 140px;
   right: 20px;
   width: 300px;
   z-index: 2147483647;
