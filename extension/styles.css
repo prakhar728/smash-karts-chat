@@ -5,9 +5,9 @@
 #sk-chat-root {
   all: initial; /* reset any page styles */
   position: fixed;
-  top: 140px;
-  right: 20px;
-  width: 300px;
+  top: clamp(80px, 12vh, 160px);
+  right: clamp(12px, 1.5vw, 28px);
+  width: clamp(240px, 22vw, 380px);
   z-index: 2147483647;
 
   display: flex;
@@ -64,7 +64,7 @@
 #sk-body {
   display: flex;
   flex-direction: column;
-  height: 260px;
+  height: clamp(200px, 28vh, 420px);
 }
 
 #sk-messages {
@@ -180,3 +180,35 @@
   cursor: pointer;
 }
 #sk-mode-select option { background: #0f172a; color: #e2e8f0; }
+
+/* ---- Resize handles ---- */
+
+.sk-resize-handle {
+  position: absolute;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  background:
+    linear-gradient(
+      135deg,
+      transparent 40%,
+      rgba(255,255,255,0.15) 40%, rgba(255,255,255,0.15) 55%,
+      transparent 55%,
+      transparent 65%,
+      rgba(255,255,255,0.1) 65%, rgba(255,255,255,0.1) 80%,
+      transparent 80%
+    );
+}
+
+.sk-resize-se {
+  right: 0;
+  cursor: nwse-resize;
+  border-bottom-right-radius: 12px;
+}
+
+.sk-resize-sw {
+  left: 0;
+  cursor: nesw-resize;
+  border-bottom-left-radius: 12px;
+  transform: scaleX(-1); /* mirror the diagonal lines */
+}

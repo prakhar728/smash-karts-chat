@@ -145,7 +145,10 @@ function buildOverlay() {
   });
   footer.appendChild(modeSelect);
 
-  root.append(header, body, footer);
+  // Resize handles
+  const resizeHandle = el('div', 'sk-resize-handle sk-resize-se');
+  const resizeHandleSW = el('div', 'sk-resize-handle sk-resize-sw');
+  root.append(header, body, footer, resizeHandle, resizeHandleSW);
   document.body.appendChild(root);
 
   // ---- Interactions ----
@@ -178,6 +181,48 @@ function buildOverlay() {
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup',   onUp);
   });
+
+  // Shared resize logic
+  function startResize(e, fromLeft) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Anchor to left so we can move it freely
+    const rect = root.getBoundingClientRect();
+    root.style.right = '';
+    root.style.left = rect.left + 'px';
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startW = root.offsetWidth;
+    const startH = root.offsetHeight;
+    const startLeft = rect.left;
+
+    function onMove(e) {
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (fromLeft) {
+        const newW = Math.max(200, startW - dx);
+        root.style.width = newW + 'px';
+        root.style.left  = (startLeft + startW - newW) + 'px';
+      } else {
+        root.style.width = Math.max(200, startW + dx) + 'px';
+      }
+
+      const newH = Math.max(160, startH + dy);
+      body.style.height = (newH - header.offsetHeight - footer.offsetHeight) + 'px';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  }
+
+  resizeHandle.addEventListener('mousedown',   (e) => startResize(e, false));
+  resizeHandleSW.addEventListener('mousedown', (e) => startResize(e, true));
 
   // Minimize / expand
   let minimized = false;
